@@ -261,7 +261,7 @@ class _TasbihTabState extends State<TasbihTab> with TickerProviderStateMixin {
               const SizedBox(height: 20),
 
               Text(
-                "Gunakan tombol volume untuk menambah / mengurangi.",
+                "Gunakan tombol volume untuk /menam                       bah / mengurangi.",
                 style: TextStyle(color: Colors.white54, fontSize: 12),
               ),
 

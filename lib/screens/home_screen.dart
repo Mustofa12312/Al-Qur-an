@@ -1,9 +1,15 @@
+import 'dart:convert';
 import 'package:alquran/globals.dart';
+import 'package:alquran/models/surah.dart';
+import 'package:alquran/screens/detail_screen.dart';
+import 'package:alquran/screens/search_screen.dart';
 import 'package:alquran/tabs/Hijb_tab.dart';
 import 'package:alquran/tabs/Page_tab.dart';
 import 'package:alquran/tabs/surah_tab.dart';
-import 'package:alquran/tabs/tasbih_tab.dart'; // <-- tambahkan
+import 'package:alquran/tabs/tasbih_tab.dart';
+import 'package:alquran/tabs/para_tab.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -17,13 +23,12 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int selectedIndex = 0;
 
-  // HALAMAN SESUAI BOTTOM NAVIGATION
   final List<Widget> pages = [
-    const _HomeBody(), // → Quran (Tab Surah/Para/Hijb/Page)
-    const HijbTab(), // → Tips (sementara hijb)
-    const TasbihTab(), // → Tasbih
-    const PageTab(), // → Doa (sementara page)
-    const SurahTab(), // → Bookmark (sementara surah)
+    const _HomeBody(),
+    const HijbTab(),
+    const TasbihTab(),
+    const PageTab(),
+    const SurahTab(),
   ];
 
   @override
@@ -32,44 +37,33 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: Background,
       appBar: const _HomeAppBar(),
       body: pages[selectedIndex],
-
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         backgroundColor: Gray,
         currentIndex: selectedIndex,
         showSelectedLabels: false,
         showUnselectedLabels: false,
-
-        onTap: (index) {
-          setState(() {
-            selectedIndex = index;
-          });
-        },
-
+        onTap: (i) => setState(() => selectedIndex = i),
         items: [
-          _bottomBarItem(icon: 'assets/svgs/alquran-icon.svg', label: 'Quran'),
-          _bottomBarItem(icon: 'assets/svgs/lampu.svg', label: 'Tips'),
-          _bottomBarItem(icon: 'assets/svgs/sholat.svg', label: 'Tasbih'),
-          _bottomBarItem(icon: 'assets/svgs/doa.svg', label: 'Doa'),
-          _bottomBarItem(icon: 'assets/svgs/simpan.svg', label: 'Bookmark'),
+          _navItem('assets/svgs/alquran-icon.svg'),
+          _navItem('assets/svgs/lampu.svg'),
+          _navItem('assets/svgs/sholat.svg'),
+          _navItem('assets/svgs/doa.svg'),
+          _navItem('assets/svgs/simpan.svg'),
         ],
       ),
     );
   }
 
-  BottomNavigationBarItem _bottomBarItem({
-    required String icon,
-    required String label,
-  }) => BottomNavigationBarItem(
-    icon: SvgPicture.asset(icon, color: textt),
-    activeIcon: SvgPicture.asset(icon, color: Primary),
-    label: label,
-  );
+  BottomNavigationBarItem _navItem(String icon) {
+    return BottomNavigationBarItem(
+      icon: SvgPicture.asset(icon, color: textt),
+      activeIcon: SvgPicture.asset(icon, color: Primary),
+      label: '',
+    );
+  }
 }
 
-// =============================
-//   HEADER + TAB VIEW QURAN
-// =============================
 class _HomeBody extends StatelessWidget {
   const _HomeBody();
 
@@ -80,20 +74,17 @@ class _HomeBody extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24),
         child: NestedScrollView(
-          headerSliverBuilder: (context, innerBoxIsScrolled) => [
+          headerSliverBuilder: (context, _) => [
             const SliverToBoxAdapter(child: _GreetingSection()),
             SliverAppBar(
               pinned: true,
-              elevation: 0,
               backgroundColor: Background,
-              automaticallyImplyLeading: false,
+              elevation: 0,
               bottom: PreferredSize(
                 preferredSize: const Size.fromHeight(0),
                 child: TabBar(
-                  unselectedLabelColor: textt,
-                  labelColor: Colors.white,
                   indicatorColor: Primary,
-                  indicatorWeight: 3,
+                  unselectedLabelColor: textt,
                   tabs: const [
                     Tab(child: Text("Surah")),
                     Tab(child: Text("Para")),
@@ -105,15 +96,7 @@ class _HomeBody extends StatelessWidget {
             ),
           ],
           body: const TabBarView(
-            children: [
-              SurahTab(),
-              // gunakan JuzListTab jika ada file-nya
-              // atau gunakan ParaTab jika ingin 30 juz
-              // sementara pakai SurahTab agar tidak error
-              SurahTab(),
-              HijbTab(),
-              PageTab(),
-            ],
+            children: [SurahTab(), ParaTab(juzNumber: 1), HijbTab(), PageTab()],
           ),
         ),
       ),
@@ -121,9 +104,6 @@ class _HomeBody extends StatelessWidget {
   }
 }
 
-// =============================
-//  GREETING BAGIAN ATAS
-// =============================
 class _GreetingSection extends StatelessWidget {
   const _GreetingSection();
 
@@ -134,19 +114,15 @@ class _GreetingSection extends StatelessWidget {
       children: [
         Text(
           "Assalamualaikum",
-          style: GoogleFonts.poppins(
-            fontSize: 18,
-            fontWeight: FontWeight.w500,
-            color: textt,
-          ),
+          style: GoogleFonts.poppins(fontSize: 18, color: textt),
         ),
         const SizedBox(height: 4),
         Text(
-          'Mustofa',
+          "Mustofa",
           style: GoogleFonts.poppins(
             fontSize: 24,
-            fontWeight: FontWeight.w500,
             color: Colors.white,
+            fontWeight: FontWeight.w500,
           ),
         ),
         const SizedBox(height: 24),
@@ -155,9 +131,6 @@ class _GreetingSection extends StatelessWidget {
   }
 }
 
-// =============================
-//       APP BAR MENU
-// =============================
 class _HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
   const _HomeAppBar();
 
@@ -165,28 +138,52 @@ class _HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     return AppBar(
       backgroundColor: Background,
-      automaticallyImplyLeading: false,
       elevation: 0,
+      automaticallyImplyLeading: false,
       title: Row(
         children: [
           IconButton(
-            onPressed: () {
-              _showTranslationMenu(context);
-            },
-            icon: SvgPicture.asset('assets/svgs/menu-icon.svg'),
+            onPressed: () => _showTranslationMenu(context),
+            icon: SvgPicture.asset("assets/svgs/menu-icon.svg"),
           ),
           const SizedBox(width: 24),
           Text(
-            'Al Quran',
+            "Al Quran",
             style: GoogleFonts.poppins(
-              fontWeight: FontWeight.bold,
-              fontSize: 20,
               color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
             ),
           ),
           const Spacer(),
+
+          // --------------------------
+          //       SEARCH BUTTON
+          // --------------------------
           IconButton(
-            onPressed: () {},
+            onPressed: () async {
+              // Muat daftar surah
+              String data = await rootBundle.loadString(
+                'assets/datas/listsurah.json',
+              );
+              List<Surah> all = surahFromJson(data);
+
+              // Buka search
+              final picked = await Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => SearchScreen(allSurah: all)),
+              );
+
+              // Jika pilih surah
+              if (picked != null) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => DetailScreen(noSurah: picked),
+                  ),
+                );
+              }
+            },
             icon: SvgPicture.asset("assets/svgs/cari.svg"),
           ),
         ],
@@ -198,9 +195,9 @@ class _HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
     showModalBottomSheet(
       context: context,
       backgroundColor: Gray,
-      builder: (context) {
+      builder: (_) {
         return StatefulBuilder(
-          builder: (context, setSheetState) {
+          builder: (context, setSheet) {
             return Padding(
               padding: const EdgeInsets.all(20),
               child: Row(
@@ -217,9 +214,7 @@ class _HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
                     activeColor: Primary,
                     value: showTranslation,
                     onChanged: (v) {
-                      setSheetState(() {
-                        showTranslation = v;
-                      });
+                      setSheet(() => showTranslation = v);
                       Navigator.pop(context);
                     },
                   ),

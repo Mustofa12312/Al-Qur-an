@@ -1,0 +1,35 @@
+name: alquran
+description: "A new Flutter project."
+publish_to: "none"
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.8.1
+dependencies:
+  cupertino_icons: ^1.0.8
+  dio: ^5.8.0+1
+  flutter:
+    sdk: flutter
+  flutter_launcher_icons: ^0.14.4
+  flutter_svg: ^2.2.0
+  google_fonts: ^6.2.1
+  path_provider: ^2.0.14
+
+dev_dependencies:
+  flutter_lints: ^5.0.0
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/svgs/
+    - assets/datas/
+    - assets/datas/surah/
+    - assets/datas/juz/
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/logo/logo.png"

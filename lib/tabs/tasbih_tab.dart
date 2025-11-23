@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:vibration/vibration.dart';
+import 'dart:math';
 
 class TasbihTab extends StatefulWidget {
   const TasbihTab({super.key});
@@ -9,23 +11,37 @@ class TasbihTab extends StatefulWidget {
   State<TasbihTab> createState() => _TasbihTabState();
 }
 
-class _TasbihTabState extends State<TasbihTab> {
+class _TasbihTabState extends State<TasbihTab> with TickerProviderStateMixin {
   int counter = 0;
   int target = 33;
   bool vibration = true;
 
+  late AnimationController beadController;
+
   @override
   void initState() {
     super.initState();
+
+    // animasi biji tasbih berputar
+    beadController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+      lowerBound: -0.15,
+      upperBound: 0.15,
+    );
+
+    // aktifkan tombol volume
     HardwareKeyboard.instance.addHandler(_onKeyEvent);
   }
 
   @override
   void dispose() {
     HardwareKeyboard.instance.removeHandler(_onKeyEvent);
+    beadController.dispose();
     super.dispose();
   }
 
+  // tombol volume
   bool _onKeyEvent(KeyEvent event) {
     if (event is KeyDownEvent) {
       if (event.logicalKey == LogicalKeyboardKey.audioVolumeUp) {
@@ -40,243 +56,215 @@ class _TasbihTabState extends State<TasbihTab> {
     return false;
   }
 
-  void increment() async {
+  // vibrasi
+  Future<void> vibrateSoft() async {
+    if (await Vibration.hasVibrator() ?? false) {
+      Vibration.vibrate(duration: 70, amplitude: 180);
+    }
+  }
+
+  Future<void> vibrateStrong3x() async {
+    if (await Vibration.hasVibrator() ?? false) {
+      Vibration.vibrate(
+        pattern: [0, 200, 120, 200, 120, 200],
+        intensities: [255, 255, 255],
+      );
+    }
+  }
+
+  // tambah hitungan
+  void increment() {
+    beadController.forward(from: 0);
+
     setState(() => counter++);
 
-    if (vibration) HapticFeedback.mediumImpact();
-
-    if (counter == target) {
-      for (int i = 0; i < 3; i++) {
-        HapticFeedback.heavyImpact();
-        await Future.delayed(const Duration(milliseconds: 150));
-      }
+    if (counter >= target) {
+      vibrateStrong3x();
+      counter = 0;
+    } else if (vibration) {
+      vibrateSoft();
     }
-
-    if (counter >= 9999) counter = 0;
   }
 
+  // kurangi hitungan
   void decrement() {
     if (counter > 0) {
+      beadController.forward(from: 0);
       setState(() => counter--);
-      if (vibration) HapticFeedback.selectionClick();
+      if (vibration) vibrateSoft();
     }
   }
 
+  // reset
   void reset() {
+    vibrateStrong3x();
     setState(() => counter = 0);
-    HapticFeedback.heavyImpact();
   }
 
-  void showTargetSheet() {
-    final controller = TextEditingController(text: target.toString());
-
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: const Color(0xFF161C2E),
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
-      ),
-      builder: (context) {
-        return Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-            left: 20,
-            right: 20,
-            top: 20,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                "Ubah Target Tasbih",
-                style: GoogleFonts.poppins(
-                  color: Colors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              TextField(
-                controller: controller,
-                keyboardType: TextInputType.number,
-                style: const TextStyle(color: Colors.white),
-                decoration: InputDecoration(
-                  hintText: "Masukkan target",
-                  hintStyle: const TextStyle(color: Colors.white54),
-                  filled: true,
-                  fillColor: const Color(0xFF1E2740),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 20),
-
-              ElevatedButton(
-                onPressed: () {
-                  setState(() {
-                    target = int.tryParse(controller.text) ?? target;
-                  });
-                  Navigator.pop(context);
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF9055FF),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 40,
-                    vertical: 12,
-                  ),
-                ),
-                child: const Text("Simpan"),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
+  // UI TASBIH
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0B1120),
-      body: SafeArea(
+      backgroundColor: const Color(0xFF0D1324),
+      body: Center(
         child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.all(25),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const SizedBox(height: 20),
+              const SizedBox(height: 40),
 
               Text(
                 "Digital Tasbih",
                 style: GoogleFonts.poppins(
-                  color: Colors.white,
-                  fontSize: 30,
+                  fontSize: 28,
                   fontWeight: FontWeight.bold,
+                  color: Colors.white,
                 ),
               ),
 
-              const SizedBox(height: 10),
+              const SizedBox(height: 40),
 
-              GestureDetector(
-                onTap: showTargetSheet,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF1C2438),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    "🎯 Target: $target (ubah)",
-                    style: const TextStyle(color: Colors.white70),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 25),
-
+              // counter display
               AnimatedContainer(
-                duration: const Duration(milliseconds: 280),
-                padding: const EdgeInsets.all(40),
+                duration: const Duration(milliseconds: 300),
+                padding: const EdgeInsets.all(35),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF171F32),
-                  borderRadius: BorderRadius.circular(28),
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF8A2EFF), Color(0xFF6100FF)],
+                  ),
+                  borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.deepPurple.withOpacity(0.4),
+                      color: Colors.purple.withOpacity(0.4),
                       blurRadius: 25,
-                      spreadRadius: 3,
                     ),
                   ],
                 ),
                 child: Text(
                   "$counter",
                   style: GoogleFonts.poppins(
+                    fontSize: 60,
                     color: Colors.white,
-                    fontSize: 65,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
 
               const SizedBox(height: 40),
 
-              GestureDetector(
-                onTap: increment,
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 150),
-                  width: 165,
-                  height: 165,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF9A4BFF), Color(0xFF5E00FF)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.purple.withOpacity(0.5),
-                        blurRadius: 40,
-                        spreadRadius: 3,
+              // ANIMASI BIJI TASBIH
+              AnimatedBuilder(
+                animation: beadController,
+                builder: (context, child) {
+                  return Transform.rotate(
+                    angle: beadController.value,
+                    child: child,
+                  );
+                },
+                child: GestureDetector(
+                  onTap: increment,
+                  child: Container(
+                    width: 160,
+                    height: 160,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF9C27FF), Color(0xFF6200EA)],
                       ),
-                    ],
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.purple.withOpacity(0.5),
+                          blurRadius: 30,
+                          spreadRadius: 2,
+                        ),
+                      ],
+                    ),
+                    child: const Icon(Icons.add, size: 80, color: Colors.white),
                   ),
-                  child: const Icon(Icons.add, size: 80, color: Colors.white),
                 ),
               ),
 
-              const SizedBox(height: 40),
+              const SizedBox(height: 30),
 
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ElevatedButton.icon(
-                    onPressed: reset,
-                    icon: const Icon(Icons.refresh),
-                    label: const Text("Reset"),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.redAccent,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 28,
-                        vertical: 14,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  children: [
+                    // pilih target
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          "Target:",
+                          style: TextStyle(color: Colors.white, fontSize: 17),
+                        ),
+
+                        const SizedBox(width: 15),
+
+                        DropdownButton<int>(
+                          dropdownColor: Color(0xFF1A2036),
+                          value: target,
+                          style: const TextStyle(color: Colors.white),
+                          items: [11, 33, 100, 300].map((e) {
+                            return DropdownMenuItem(
+                              value: e,
+                              child: Text(
+                                "$e",
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            );
+                          }).toList(),
+                          onChanged: (v) {
+                            if (v != null) setState(() => target = v);
+                          },
+                        ),
+                      ],
                     ),
-                  ),
-                  const SizedBox(width: 20),
-                  Row(
-                    children: [
-                      const Text(
-                        "Getar",
-                        style: TextStyle(color: Colors.white),
-                      ),
-                      Switch(
-                        value: vibration,
-                        activeColor: Colors.greenAccent,
-                        onChanged: (v) => setState(() => vibration = v),
-                      ),
-                    ],
-                  ),
-                ],
+
+                    const SizedBox(height: 20),
+
+                    // reset + vibration toggle
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        ElevatedButton.icon(
+                          onPressed: reset,
+                          icon: const Icon(Icons.refresh),
+                          label: const Text("Reset"),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.redAccent,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 25,
+                              vertical: 14,
+                            ),
+                          ),
+                        ),
+
+                        Row(
+                          children: [
+                            const Text(
+                              "Vibration",
+                              style: TextStyle(color: Colors.white),
+                            ),
+                            Switch(
+                              value: vibration,
+                              activeColor: Colors.greenAccent,
+                              onChanged: (v) => setState(() => vibration = v),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
 
               const SizedBox(height: 20),
+
               Text(
-                "Gunakan tombol volume untuk menambah atau mengurangi.",
-                style: GoogleFonts.poppins(color: Colors.white54, fontSize: 12),
-                textAlign: TextAlign.center,
+                "Gunakan tombol volume untuk menambah / mengurangi.",
+                style: TextStyle(color: Colors.white54, fontSize: 12),
               ),
+
               const SizedBox(height: 40),
             ],
           ),

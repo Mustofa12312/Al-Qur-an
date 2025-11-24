@@ -5,6 +5,26 @@ import 'package:google_fonts/google_fonts.dart';
 import '../models/juz.dart';
 import '../screens/detail_juz_screen.dart';
 
+/// ==========================
+///    LIST 30 JUZ
+/// ==========================
+class JuzListTab extends StatelessWidget {
+  const JuzListTab({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      itemCount: 30,
+      itemBuilder: (context, index) {
+        return ParaTab(juzNumber: index + 1);
+      },
+    );
+  }
+}
+
+/// ==========================
+///    ITEM SETIAP JUZ
+/// ==========================
 class ParaTab extends StatelessWidget {
   final int juzNumber;
 
@@ -14,6 +34,7 @@ class ParaTab extends StatelessWidget {
     final String response = await rootBundle.loadString(
       "assets/datas/juz/$juz.json",
     );
+
     return Juz.fromJson(json.decode(response)["data"]);
   }
 
@@ -23,38 +44,47 @@ class ParaTab extends StatelessWidget {
       future: _loadJuz(juzNumber),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+          return const Padding(
+            padding: EdgeInsets.all(20),
+            child: Center(child: CircularProgressIndicator()),
+          );
         }
 
         if (snapshot.hasError) {
-          return Center(child: Text("Error: ${snapshot.error}"));
+          return Padding(
+            padding: const EdgeInsets.all(20),
+            child: Text(
+              "Error memuat Juz $juzNumber",
+              style: const TextStyle(color: Colors.redAccent),
+            ),
+          );
         }
 
         if (!snapshot.hasData) {
-          return const Center(child: Text("Data tidak ditemukan."));
+          return const SizedBox();
         }
 
         final juzData = snapshot.data!;
 
         return GestureDetector(
-          behavior: HitTestBehavior.opaque,
           onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (context) => DetailJuzScreen(juz: juzData),
-              ),
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => DetailJuzScreen(juz: juzData)),
             );
           },
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+            margin: const EdgeInsets.only(bottom: 4),
             child: Row(
               children: [
+                /// Nomor Juz
                 Container(
-                  height: 36,
-                  width: 36,
+                  width: 40,
+                  height: 40,
                   decoration: BoxDecoration(
                     color: Colors.deepPurple,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(10),
                   ),
                   child: Center(
                     child: Text(
@@ -66,7 +96,10 @@ class ParaTab extends StatelessWidget {
                     ),
                   ),
                 ),
+
                 const SizedBox(width: 16),
+
+                /// Info Juz
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -75,23 +108,27 @@ class ParaTab extends StatelessWidget {
                         "Juz ${juzData.juz}",
                         style: GoogleFonts.poppins(
                           color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
+                          fontSize: 17,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
+
                       const SizedBox(height: 4),
+
                       Text(
-                        "Dari: ${juzData.juzStartInfo} → ${juzData.juzEndInfo}",
+                        "${juzData.juzStartInfo} → ${juzData.juzEndInfo}",
                         style: GoogleFonts.poppins(
-                          color: Colors.grey.shade300,
+                          color: Colors.white70,
                           fontSize: 14,
                         ),
                       ),
+
                       const SizedBox(height: 2),
+
                       Text(
                         "${juzData.totalVerses} ayat",
                         style: GoogleFonts.poppins(
-                          color: Colors.grey.shade500,
+                          color: Colors.white38,
                           fontSize: 12,
                         ),
                       ),

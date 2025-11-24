@@ -14,6 +14,7 @@ dependencies:
   flutter_svg: ^2.2.0
   google_fonts: ^6.2.1
   path_provider: ^2.0.14
+  shared_preferences: ^2.5.3
   vibration: ^3.1.4
 
 dev_dependencies:
@@ -29,6 +30,12 @@ flutter:
     - assets/datas/
     - assets/datas/surah/
     - assets/datas/juz/
+    - assets/fonts/
+
+  fonts:
+    - family: KFGQ
+      fonts:
+        - asset: assets/fonts/KFGQPC.otf
 
 flutter_launcher_icons:
   android: true

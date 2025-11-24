@@ -8,6 +8,7 @@ import 'package:alquran/tabs/Page_tab.dart';
 import 'package:alquran/tabs/surah_tab.dart';
 import 'package:alquran/tabs/tasbih_tab.dart';
 import 'package:alquran/tabs/para_tab.dart';
+import './detail_juz_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -23,12 +24,13 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int selectedIndex = 0;
 
+  // Halaman Bottom Navigation
   final List<Widget> pages = [
-    const _HomeBody(),
-    const HijbTab(),
-    const TasbihTab(),
-    const PageTab(),
-    const SurahTab(),
+    const _HomeBody(), // Halaman Quran + Tabs
+    const HijbTab(), // Tips (sementara Hijb)
+    const TasbihTab(), // Tasbih
+    const PageTab(), // Doa (sementara Page)
+    const SurahTab(), // Bookmark (sementara Surah)
   ];
 
   @override
@@ -37,6 +39,7 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: Background,
       appBar: const _HomeAppBar(),
       body: pages[selectedIndex],
+
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         backgroundColor: Gray,
@@ -59,11 +62,14 @@ class _HomeScreenState extends State<HomeScreen> {
     return BottomNavigationBarItem(
       icon: SvgPicture.asset(icon, color: textt),
       activeIcon: SvgPicture.asset(icon, color: Primary),
-      label: '',
+      label: "",
     );
   }
 }
 
+// =============================
+//      TAB VIEW UTAMA QURAN
+// =============================
 class _HomeBody extends StatelessWidget {
   const _HomeBody();
 
@@ -85,6 +91,7 @@ class _HomeBody extends StatelessWidget {
                 child: TabBar(
                   indicatorColor: Primary,
                   unselectedLabelColor: textt,
+                  labelColor: Colors.white,
                   tabs: const [
                     Tab(child: Text("Surah")),
                     Tab(child: Text("Para")),
@@ -95,8 +102,15 @@ class _HomeBody extends StatelessWidget {
               ),
             ),
           ],
+
+          // TAB KONTEN
           body: const TabBarView(
-            children: [SurahTab(), ParaTab(juzNumber: 1), HijbTab(), PageTab()],
+            children: [
+              SurahTab(), // Surah
+              JuzListTab(), // FIX: ganti DetailJuzScreen() menjadi daftar Juz
+              HijbTab(),
+              PageTab(),
+            ],
           ),
         ),
       ),
@@ -104,6 +118,9 @@ class _HomeBody extends StatelessWidget {
   }
 }
 
+// =============================
+//      GREETING HEADER
+// =============================
 class _GreetingSection extends StatelessWidget {
   const _GreetingSection();
 
@@ -121,8 +138,8 @@ class _GreetingSection extends StatelessWidget {
           "Mustofa",
           style: GoogleFonts.poppins(
             fontSize: 24,
-            color: Colors.white,
             fontWeight: FontWeight.w500,
+            color: Colors.white,
           ),
         ),
         const SizedBox(height: 24),
@@ -131,6 +148,9 @@ class _GreetingSection extends StatelessWidget {
   }
 }
 
+// =============================
+//        APP BAR ATAS
+// =============================
 class _HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
   const _HomeAppBar();
 
@@ -157,24 +177,20 @@ class _HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
           ),
           const Spacer(),
 
-          // --------------------------
-          //       SEARCH BUTTON
-          // --------------------------
+          // SEARCH
           IconButton(
             onPressed: () async {
-              // Muat daftar surah
               String data = await rootBundle.loadString(
                 'assets/datas/listsurah.json',
               );
               List<Surah> all = surahFromJson(data);
 
-              // Buka search
+              // buka search
               final picked = await Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => SearchScreen(allSurah: all)),
               );
 
-              // Jika pilih surah
               if (picked != null) {
                 Navigator.push(
                   context,
@@ -191,6 +207,7 @@ class _HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
     );
   }
 
+  // MENU TERJEMAH
   static void _showTranslationMenu(BuildContext context) {
     showModalBottomSheet(
       context: context,

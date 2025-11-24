@@ -19,9 +19,7 @@ class _DetailJuzScreenState extends State<DetailJuzScreen> {
   bool autoScroll = false;
   double scrollSpeed = 25;
 
-  /// --------------------------
-  /// AUTO SCROLL + STOP OTOMATIS
-  /// --------------------------
+  /// AUTO SCROLL
   void startAutoScroll() async {
     setState(() => autoScroll = true);
 
@@ -36,7 +34,7 @@ class _DetailJuzScreenState extends State<DetailJuzScreen> {
 
       _scrollController.animateTo(
         _scrollController.offset + scrollSpeed,
-        duration: const Duration(milliseconds: 100),
+        duration: const Duration(milliseconds: 120),
         curve: Curves.linear,
       );
     }
@@ -46,22 +44,15 @@ class _DetailJuzScreenState extends State<DetailJuzScreen> {
     setState(() => autoScroll = false);
   }
 
-  void updateSpeed(double value) {
-    setState(() => scrollSpeed = value);
-  }
-
-  /// --------------------------
-  /// MENU AUTO SCROLL
-  /// --------------------------
-  void _showAutoScrollMenu(BuildContext context) {
+  void openSpeedMenu(BuildContext context) {
     showModalBottomSheet(
       backgroundColor: const Color(0xFF121931),
       context: context,
       builder: (_) {
         return StatefulBuilder(
-          builder: (context, setSheet) {
+          builder: (_, setStateSheet) {
             return Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(25),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -69,25 +60,20 @@ class _DetailJuzScreenState extends State<DetailJuzScreen> {
                     "Auto Scroll",
                     style: GoogleFonts.poppins(
                       color: Colors.white,
-                      fontSize: 18,
                       fontWeight: FontWeight.bold,
+                      fontSize: 18,
                     ),
                   ),
-                  const SizedBox(height: 15),
+                  const SizedBox(height: 20),
 
-                  /// BUTTON
+                  /// Tombol Start / Stop
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF9055FF),
                     ),
                     onPressed: () {
                       Navigator.pop(context);
-
-                      if (autoScroll) {
-                        stopAutoScroll();
-                      } else {
-                        startAutoScroll();
-                      }
+                      autoScroll ? stopAutoScroll() : startAutoScroll();
                     },
                     child: Text(
                       autoScroll ? "Stop" : "Start",
@@ -101,6 +87,7 @@ class _DetailJuzScreenState extends State<DetailJuzScreen> {
                     "Kecepatan Scroll",
                     style: GoogleFonts.poppins(color: Colors.white),
                   ),
+
                   Slider(
                     min: 5,
                     max: 80,
@@ -108,8 +95,8 @@ class _DetailJuzScreenState extends State<DetailJuzScreen> {
                     activeColor: const Color(0xFF9055FF),
                     value: scrollSpeed,
                     onChanged: (v) {
-                      setSheet(() => scrollSpeed = v);
-                      updateSpeed(v);
+                      setStateSheet(() => scrollSpeed = v);
+                      setState(() => scrollSpeed = v);
                     },
                   ),
                 ],
@@ -128,45 +115,38 @@ class _DetailJuzScreenState extends State<DetailJuzScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFF121931),
 
-      /// --------------------------
-      /// APP BAR
-      /// --------------------------
       appBar: AppBar(
         backgroundColor: const Color(0xFF121931),
         elevation: 0,
         title: Row(
           children: [
             IconButton(
-              onPressed: () => Navigator.of(context).pop(),
-              icon: SvgPicture.asset('assets/svgs/kembali.svg'),
+              onPressed: () => Navigator.pop(context),
+              icon: SvgPicture.asset("assets/svgs/kembali.svg"),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 15),
             Text(
               "Juz ${widget.juz.juz}",
               style: GoogleFonts.poppins(
+                fontSize: 22,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
-                fontSize: 22,
               ),
             ),
             const Spacer(),
 
-            /// ICON PLAY/PAUSE AUTO SCROLL
             IconButton(
-              onPressed: () => _showAutoScrollMenu(context),
+              onPressed: () => openSpeedMenu(context),
               icon: Icon(
                 autoScroll ? Icons.pause_circle : Icons.play_circle_fill,
                 color: Colors.white,
-                size: 32,
+                size: 30,
               ),
             ),
           ],
         ),
       ),
 
-      /// --------------------------
-      /// ISI HALAMAN (HEADER + AYAT)
-      /// --------------------------
       body: ListView.builder(
         controller: _scrollController,
         padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -179,9 +159,7 @@ class _DetailJuzScreenState extends State<DetailJuzScreen> {
     );
   }
 
-  /// --------------------------
-  /// HEADER JUZ (ikut scroll)
-  /// --------------------------
+  /// HEADER JUZ
   Widget _header(Juz juz) {
     return Padding(
       padding: const EdgeInsets.only(top: 20, bottom: 30),
@@ -195,7 +173,7 @@ class _DetailJuzScreenState extends State<DetailJuzScreen> {
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 5),
           Text(
             "${juz.totalVerses} Ayat",
             style: GoogleFonts.poppins(color: Colors.white70, fontSize: 16),
@@ -205,15 +183,14 @@ class _DetailJuzScreenState extends State<DetailJuzScreen> {
     );
   }
 
-  /// --------------------------
   /// ITEM AYAT
-  /// --------------------------
   Widget _ayatItem(Verse ayah) {
     return Padding(
-      padding: const EdgeInsets.only(top: 24),
+      padding: const EdgeInsets.only(top: 25),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          /// HEADER AYAT (nomor + icon)
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 10),
             decoration: BoxDecoration(
@@ -242,36 +219,32 @@ class _DetailJuzScreenState extends State<DetailJuzScreen> {
                 const Spacer(),
                 const Icon(Icons.share, color: Colors.white),
                 const SizedBox(width: 16),
-                const Icon(
-                  Icons.play_circle_outline_outlined,
-                  color: Colors.white,
-                ),
+                const Icon(Icons.play_circle_outline, color: Colors.white),
                 const SizedBox(width: 16),
                 const Icon(Icons.bookmark_add_outlined, color: Colors.white),
               ],
             ),
           ),
 
-          const SizedBox(height: 32),
+          const SizedBox(height: 30),
 
-          /// ARAB
+          /// TEKS ARAB
           SelectableText(
             ayah.arab,
-            style: GoogleFonts.amiri(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: 20,
-              height: 2,
-            ),
             textAlign: TextAlign.right,
+            style: const TextStyle(
+              fontFamily: "KFGQ",
+              fontSize: 30,
+              height: 2.5,
+              color: Colors.white,
+            ),
           ),
 
-          /// TERJEMAH (menyesuaikan setting)
+          /// TERJEMAHAN (bisa ON/OFF dari menu utama)
           if (showTranslation && ayah.translation.isNotEmpty)
             SelectableText(
               ayah.translation,
               style: GoogleFonts.poppins(color: Colors.white70, fontSize: 14),
-              textAlign: TextAlign.justify,
             ),
         ],
       ),
